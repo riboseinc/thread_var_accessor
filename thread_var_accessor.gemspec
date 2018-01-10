@@ -16,8 +16,8 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/riboseinc/thread_var_accessor"
   s.license     = "MIT"
 
-  s.summary     = %q{ThreadVarAccessor allows setting of thread-wide variables with scope binding}
-  s.description = %q{ThreadVarAccessor allows setting of thread-wide variables with scope binding}
+  s.summary     = "ThreadVarAccessor allows setting of thread-wide variables with scope binding"
+  s.description = "ThreadVarAccessor allows setting of thread-wide variables with scope binding"
 
   spec_file_matcher = proc { |f| f.match(%r{^(test|spec|features)/}) }
   all_files         = `git ls-files -z`.split("\x0")

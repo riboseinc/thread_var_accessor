@@ -7,5 +7,5 @@ Bundler.require :default, :development
 
 # initialize logger
 ThreadVarAccessor::Logger.initialize_logger(
-  File.expand_path("../debug.log", __FILE__)
+  File.expand_path("../debug.log", __FILE__),
 )
