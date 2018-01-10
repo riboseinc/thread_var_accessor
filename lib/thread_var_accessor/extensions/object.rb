@@ -2,7 +2,7 @@
 #
 #
 
-require 'thread_var_accessor/class_methods'
+require "thread_var_accessor/class_methods"
 
 class Object
   extend ThreadVarAccessor::ClassMethods

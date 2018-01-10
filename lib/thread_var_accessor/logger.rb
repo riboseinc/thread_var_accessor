@@ -10,14 +10,14 @@ module ThreadVarAccessor
       return if @@logger
 
       begin
-        require 'active_record'
-        require 'logger'
+        require "active_record"
+        require "logger"
 
         unless ActiveRecord::Base.logger
           if filepath.nil?
             filepath = File.expand_path "../../../spec/debug.log", __FILE__
           end
-          puts 'made a new logger'
+          puts "made a new logger"
           ActiveRecord::Base.logger = Logger.new(filepath)
         end
         @@logger = ActiveRecord::Base.logger
