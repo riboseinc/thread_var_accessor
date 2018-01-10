@@ -23,6 +23,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_development_dependency "bundler", "~> 1.15"
-  s.add_development_dependency "rake", "~> 0.9"
-  s.add_development_dependency "rspec", ">= 2.0"
+  s.add_development_dependency "rake", "~> 10.0"
+  s.add_development_dependency "rspec", "~> 3.7"
 end
