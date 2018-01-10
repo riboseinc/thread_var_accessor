@@ -5,7 +5,7 @@
 require File.expand_path("../spec_helper", __FILE__)
 
 describe ThreadVarAccessor do
-  def create_test_class accessor = :test
+  def create_test_class(accessor = :test)
     tc = Class.new
     tc.class_eval do
       include ThreadVarAccessor
@@ -15,7 +15,7 @@ describe ThreadVarAccessor do
   end
 
   before do
-    @test_class = create_test_class()
+    @test_class = create_test_class
   end
 
   it "test tva" do
@@ -55,7 +55,7 @@ describe ThreadVarAccessor do
 
   it "test independence" do
     tc = @test_class
-    tc2 = create_test_class()
+    tc2 = create_test_class
     tc.binding_test(:foo) do
       tc.test.should eql(:foo)
       tc2.test.should be_nil
@@ -81,7 +81,7 @@ describe ThreadVarAccessor do
     tc.test2 = :initial2
     ti.test3 = :initial3
 
-    [tc.test, tc.test2, ti.test3].should eql([:initial, :initial2, :initial3])
+    [tc.test, tc.test2, ti.test3].should eql(%i[initial initial2 initial3])
 
     ThreadVarAccessor.binding_many([tc, :test, :bound1],
                                    [ti, :test3],
@@ -91,6 +91,6 @@ describe ThreadVarAccessor do
       tc.test2.should eql(:bound2)
     end
 
-    [tc.test, tc.test2, ti.test3].should eql([:initial, :initial2, :initial3])
+    [tc.test, tc.test2, ti.test3].should eql(%i[initial initial2 initial3])
   end
 end

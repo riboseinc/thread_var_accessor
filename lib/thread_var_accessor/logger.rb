@@ -27,11 +27,11 @@ module ThreadVarAccessor
     end
 
     def self.error(message)
-      self.initialize_logger
+      initialize_logger
 
       begin
         @@logger.error { message }
-      rescue
+      rescue StandardError
         puts message
       end
     end

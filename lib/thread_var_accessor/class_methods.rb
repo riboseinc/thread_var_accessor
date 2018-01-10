@@ -8,20 +8,20 @@ module ThreadVarAccessor
   module ClassMethods
     def thread_var_accessor(*args)
       options = {}
-      options = args.pop if args.last.kind_of? Hash
+      options = args.pop if args.last.is_a? Hash
       args.each do |arg|
         define_thread_accessor arg, options
       end
     end
 
-    def define_thread_accessor var_name, options
+    def define_thread_accessor(var_name, _options)
       var_name = var_name.to_s
       raise "Invalid thread accessor name #{var_name}" unless var_name =~ /^[a-zA-Z][a-zA-Z_0-9]*$/
-      selector_name = "#{var_name}!#{self.__id__}".to_sym.inspect
-      selector_stack_name = "#{var_name}!stack!#{self.__id__}".to_sym.inspect
+      selector_name = "#{var_name}!#{__id__}".to_sym.inspect
+      selector_stack_name = "#{var_name}!stack!#{__id__}".to_sym.inspect
       stack_place = "Thread.current[#{selector_stack_name}]"
       var_place = "Thread.current[#{selector_name}]"
-      self.instance_eval <<-HERE
+      instance_eval <<-HERE
         def self.bind_#{var_name} value
           stack = #{stack_place}
           old_value = #{var_place}
