@@ -2,7 +2,7 @@
 #
 #
 
-require File.expand_path('../spec_helper',  __FILE__)
+require File.expand_path("../spec_helper",  __FILE__)
 
 describe ThreadVarAccessor do
   def create_test_class accessor = :test

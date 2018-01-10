@@ -2,9 +2,9 @@
 #
 #
 
-require 'thread_var_accessor/class_methods'
-require 'thread_var_accessor/extensions/object'
-require 'thread_var_accessor/logger'
+require "thread_var_accessor/class_methods"
+require "thread_var_accessor/extensions/object"
+require "thread_var_accessor/logger"
 
 module ThreadVarAccessor
 

@@ -6,9 +6,9 @@
 
 begin
   # Rspec 2.0
-  require 'rspec/core/rake_task'
+  require "rspec/core/rake_task"
 
-  desc 'Default: run specs'
+  desc "Default: run specs"
   task :default => :spec
   RSpec::Core::RakeTask.new(:spec) do |t|
     t.rspec_opts = ["-c", "-f progress", "-r ./spec/spec_helper.rb"]
