@@ -9,9 +9,9 @@ module ThreadVarAccessor
     def thread_var_accessor(*args)
       options = {}
       options = args.pop if args.last.kind_of? Hash
-      args.each { |arg|
+      args.each do |arg|
         define_thread_accessor arg, options
-      }
+      end
     end
 
     def define_thread_accessor var_name, options
