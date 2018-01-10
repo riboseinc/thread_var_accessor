@@ -2,7 +2,8 @@
 #
 #
 
-require 'thread_var_accessor'
+require "bundler"
+Bundler.require :default, :development
 
 # initialize logger
 ThreadVarAccessor::Logger.initialize_logger(
