@@ -4,7 +4,7 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-describe ThreadVarAccessor do
+RSpec.describe ThreadVarAccessor do
   def create_test_class(accessor = :test)
     tc = Class.new
     tc.class_eval do
