@@ -7,7 +7,6 @@ require "thread_var_accessor/extensions/object"
 require "thread_var_accessor/logger"
 
 module ThreadVarAccessor
-
   def self.included(base)
     base.extend ThreadVarAccessor::ClassMethods
   end
@@ -27,11 +26,11 @@ module ThreadVarAccessor
         setter = "bind_#{attr}"
 
         restorer = if object.respond_to?(setter)
-                     proc {object.send("unbind_#{attr}")}
+                     proc { object.send("unbind_#{attr}") }
                    else
                      setter = "#{attr}=".intern
                      old_value = object.send(attr)
-                     proc {object.send(setter, old_value)}
+                     proc { object.send(setter, old_value) }
                    end
         object.send(setter, value)
         restorers << restorer
@@ -46,10 +45,7 @@ module ThreadVarAccessor
 
           ThreadVarAccessor::Logger.error(error_message)
         end
-
       end
     end
-
   end
-
 end

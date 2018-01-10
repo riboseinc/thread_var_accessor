@@ -6,7 +6,7 @@ module ThreadVarAccessor
   class Logger
     @@logger = nil
 
-    def self.initialize_logger(filepath=nil)
+    def self.initialize_logger(filepath = nil)
       return if @@logger
 
       begin
@@ -21,22 +21,19 @@ module ThreadVarAccessor
           ActiveRecord::Base.logger = Logger.new(filepath)
         end
         @@logger = ActiveRecord::Base.logger
-
       rescue LoadError
         puts "ActiveRecord::Base.logger unable to initialize"
       end
-
     end
 
     def self.error(message)
       self.initialize_logger
 
       begin
-        @@logger.error {message}
+        @@logger.error { message }
       rescue
         puts message
       end
     end
-
   end
 end

@@ -6,11 +6,10 @@ module ThreadVarAccessor
   EMPTY_BIND_VALUE = Object.new
 
   module ClassMethods
-
     def thread_var_accessor(*args)
       options = {}
       options = args.pop if args.last.kind_of? Hash
-      args.each {|arg|
+      args.each { |arg|
         define_thread_accessor arg, options
       }
     end
@@ -61,8 +60,5 @@ module ThreadVarAccessor
         end
       HERE
     end
-
   end
 end
-
-
