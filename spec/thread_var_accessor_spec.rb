@@ -4,93 +4,171 @@
 
 require File.expand_path("../spec_helper", __FILE__)
 
-RSpec.describe ThreadVarAccessor do
-  def create_test_class(accessor = :test)
-    tc = Class.new
-    tc.class_eval do
-      include ThreadVarAccessor
-      thread_var_accessor accessor
+RSpec.describe "#thread_var_accessor" do
+  let(:item) { Object.new }
+
+  example "variables can be read, written, and cleared" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar
     end
-    tc
+
+    expect(TC.tvar).to be(nil)
+    TC.tvar = item
+    expect(TC.tvar).to be(item)
+    TC.tvar = 7
+    expect(TC.tvar).to be(7)
+    TC.tvar = nil
+    expect(TC.tvar).to be(nil)
   end
 
-  before do
-    @test_class = create_test_class
+  example "many variables can be defined in a class" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar1, :tvar2
+      thread_var_accessor :tvar0
+    end
+
+    expect(TC.tvar1).to be(nil)
+    expect(TC.tvar2).to be(nil)
+    expect(TC.tvar0).to be(nil)
+    TC.tvar1 = item
+    TC.tvar2 = 7
+    TC.tvar0 = :foo
+    expect(TC.tvar1).to be(item)
+    expect(TC.tvar2).to be(7)
+    expect(TC.tvar0).to be(:foo)
   end
 
-  it "test tva" do
-    tc = @test_class
-    expect(tc.test).to be_nil
-    tc.bind_test :foo
-    begin
-      expect(tc.test).to eql(:foo)
-      tc.bind_test :bar
-      begin
-        expect(tc.test).to eql(:bar)
-        tc.test = nil
-        expect(tc.test).to be_nil
-      ensure
-        tc.unbind_test
+  example "stacking values with #bind_* and #unbind_* methods" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar, :tvar2
+    end
+
+    assigning_sequence = [item, 7, nil, :foo]
+
+    TC.tvar = :initial
+    TC.tvar2 = :always_the_same
+
+    # Calling #bind shadows previously assigned variable…
+
+    [:initial, *assigning_sequence].each_cons(2) do |v_before, v_to_bind|
+      expect(TC.tvar).to be(v_before)
+      TC.bind_tvar(v_to_bind)
+      expect(TC.tvar).to be(v_to_bind)
+      expect(TC.tvar2).to be(:always_the_same)
+    end
+
+    # …which can be recovered by calling #unbind.
+
+    [:initial, *assigning_sequence].reverse.each_cons(2) do |_v_now, v_after|
+      TC.unbind_tvar
+      expect(TC.tvar).to be(v_after)
+      expect(TC.tvar2).to be(:always_the_same)
+    end
+
+    # However, when stack is empty, #unbind is a NOOP.
+
+    2.times do
+      TC.unbind_tvar
+      expect(TC.tvar).to be(nil)
+      expect(TC.tvar2).to be(:always_the_same)
+    end
+  end
+
+  example "stacking values with #binding_* method" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar, :tvar2
+    end
+
+    assigning_sequence = [item, 7, nil, :foo]
+
+    TC.tvar = :initial
+    TC.tvar2 = :always_the_same
+
+    # Recursively checking
+
+    tests = lambda do |v_before, v_to_bind, *rest|
+      expect(TC.tvar).to be(v_before)
+      expect(TC.tvar2).to be(:always_the_same)
+
+      TC.binding_tvar(v_to_bind) do
+        tests.call(v_to_bind, *rest) unless rest.empty?
       end
-      expect(tc.test).to eql(:foo)
-    ensure
-      tc.unbind_test
-    end
-    expect(tc.test).to be_nil
-  end
 
-  it "test binding" do
-    tc = @test_class
-    tc.binding_test(:foo) do
-      expect(tc.test).to eql(:foo)
-      tc.binding_test(:bar) do
-        expect(tc.test).to eql(:bar)
-        tc.test = nil
-        expect(tc.test).to be_nil
-      end
-      expect(tc.test).to eql(:foo)
+      expect(TC.tvar).to be(v_before)
+      expect(TC.tvar2).to be(:always_the_same)
     end
-    expect(tc.test).to be_nil
-  end
 
-  it "test independence" do
-    tc = @test_class
-    tc2 = create_test_class
-    tc.binding_test(:foo) do
-      expect(tc.test).to eql(:foo)
-      expect(tc2.test).to be_nil
-      tc2.binding_test(:bar) do
-        expect(tc.test).to eql(:foo)
-        expect(tc2.test).to eql(:bar)
+    tests.call(:initial, *assigning_sequence)
+
+    # Ensures the value gets reverted despite exception being raised…
+
+    tests_with_exception = lambda do
+      TC.binding_tvar(14) do
+        expect(TC.tvar).to be(14)
+        expect(TC.tvar2).to be(:always_the_same)
+        raise "err!"
       end
     end
+
+    expect(&tests_with_exception).to raise_exception(StandardError, "err!")
+
+    expect(TC.tvar).to be(:initial)
+    expect(TC.tvar2).to be(:always_the_same)
+
+    # …or other code jumps.
+
+    catch :loop_breaker do
+      loop do
+        TC.binding_tvar(14) do
+          expect(TC.tvar).to be(14)
+          expect(TC.tvar2).to be(:always_the_same)
+          throw :loop_breaker
+          puts "unreachable"
+        end
+      end
+    end
+
+    expect(TC.tvar).to be(:initial)
+    expect(TC.tvar2).to be(:always_the_same)
   end
 
-  it "test binding many" do
-    tc = @test_class
-    tc.module_eval do
-      class << self
-        attr :test2, true
-      end
-      attr :test3, true
+  example "variables are fiber-local" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar
     end
 
-    ti = tc.new
+    TC.tvar = 7
 
-    tc.test = :initial
-    tc.test2 = :initial2
-    ti.test3 = :initial3
-
-    expect([tc.test, tc.test2, ti.test3]).to eql(%i[initial initial2 initial3])
-
-    ThreadVarAccessor.binding_many([tc, :test, :bound1],
-                                   [ti, :test3],
-                                   [tc, :test2, :bound2]) do
-      expect(tc.test).to eql(:bound1)
-      expect(ti.test3).to be_nil
-      expect(tc.test2).to eql(:bound2)
+    fiber = Fiber.new do
+      expect(TC.tvar).to be(nil)
+      TC.tvar = 15
+      expect(TC.tvar).to be(15)
     end
 
-    expect([tc.test, tc.test2, ti.test3]).to eql(%i[initial initial2 initial3])
+    fiber.resume
+
+    expect(TC.tvar).to be(7)
+  end
+
+  example "variables defined on different classes are independent from " +
+      "each other" do
+    instantiate_test_class "TC" do
+      thread_var_accessor :tvar
+    end
+    instantiate_test_class "TC2" do
+      thread_var_accessor :tvar
+    end
+
+    expect(TC.tvar).to be(nil)
+    expect(TC2.tvar).to be(nil)
+    TC.tvar = 7
+    expect(TC.tvar).to be(7)
+    expect(TC2.tvar).to be(nil)
+    TC2.binding_tvar(item) do
+      expect(TC.tvar).to be(7)
+      expect(TC2.tvar).to be(item)
+    end
+    expect(TC.tvar).to be(7)
+    expect(TC2.tvar).to be(nil)
   end
 end
